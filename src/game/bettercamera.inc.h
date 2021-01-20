@@ -114,10 +114,10 @@ s16 newcam_saved_defmode = -1;
 
 #ifdef TARGET_N64 // TODO: save to EEPROM
 unsigned int configCameraXSens   = 25;
-unsigned int configCameraYSens   = 25;
-unsigned int configCameraAggr    = 0;
+unsigned int configCameraYSens   = 10;
+unsigned int configCameraAggr    = 100;
 unsigned int configCameraPan     = 0;
-unsigned int configCameraDegrade = 10; // 0 - 100%
+unsigned int configCameraDegrade = 100; // 0 - 100%
 int         configCameraInvertX = TRUE;
 int         configCameraInvertY = FALSE;
 int         configEnableCamera  = TRUE;
@@ -127,22 +127,10 @@ int         configCameraAnalog  = FALSE;
 ///This is called at every level initialisation.
 ///You can edit these if you plan to use custom levels
 void newcam_init(struct Camera *c, u8 dv) {
-    newcam_tilt = 1500;
+    newcam_tilt = 4000;
     newcam_distance_target = newcam_distance_values[dv];
     newcam_yaw = -c->yaw+0x4000; //Mario and the camera's yaw have this offset between them.
-    newcam_mode = NC_MODE_NORMAL;
-    ///This here will dictate what modes the camera will start in at the beginning of a level. Below are some examples.
-    switch (gCurrLevelNum) {
-        case LEVEL_BITDW: newcam_yaw = 0x4000; newcam_mode = NC_MODE_8D; newcam_tilt = 4000; newcam_distance_target = newcam_distance_values[2]; break;
-        case LEVEL_BITFS: newcam_yaw = 0x4000; newcam_mode = NC_MODE_8D; newcam_tilt = 4000; newcam_distance_target = newcam_distance_values[2]; break;
-        case LEVEL_BITS: newcam_yaw = 0x4000; newcam_mode = NC_MODE_8D; newcam_tilt = 4000; newcam_distance_target = newcam_distance_values[2]; break;
-        case LEVEL_WF: newcam_yaw = 0x4000; newcam_tilt = 2000; newcam_distance_target = newcam_distance_values[1]; break;
-        case LEVEL_RR: newcam_yaw = 0x6000; newcam_tilt = 2000; newcam_distance_target = newcam_distance_values[2]; break;
-        case LEVEL_CCM: if (gCurrAreaIndex == 1) {newcam_yaw = -0x4000; newcam_tilt = 2000; newcam_distance_target = newcam_distance_values[1];} else newcam_mode = NC_MODE_SLIDE; break;
-        case LEVEL_WDW: newcam_yaw = 0x2000; newcam_tilt = 3000; newcam_distance_target = newcam_distance_values[1]; break;
-        case 27: newcam_mode = NC_MODE_SLIDE; break;
-        case LEVEL_TTM: if (gCurrAreaIndex == 2) newcam_mode = NC_MODE_SLIDE; break;
-    }
+    newcam_mode = NC_MODE_8D;
 
     // clear these out when entering a new level to prevent "camera mode buffering"
     newcam_saved_defmode = -1;

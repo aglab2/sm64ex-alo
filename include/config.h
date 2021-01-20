@@ -33,7 +33,7 @@
 /// Fixes bug where standing a controllable platform in HMC be invisible while it blinks
 #define BUGFIX_HMC_VISIBLE_CONTROL_PLATFORM (0 || VERSION_SH || QOL_FIXES)
 /// Fixes bug where the angle speed isn't preserved while in a pole
-#define BUGFIX_PRESERVE_VEL_POLE (0 || VERSION_SH || QOL_FIXES)
+#define BUGFIX_PRESERVE_VEL_POLE 0
 
 // Quality of life defines
 // Mostly a compilation of code provided by various people

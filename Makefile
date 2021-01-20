@@ -28,7 +28,7 @@ NON_MATCHING ?= 1
 COMPILER_N64 ?= gcc
 
 # Build for original N64 (no pc code)
-TARGET_N64 = 0
+TARGET_N64 = 1
 # Build and optimize for Raspberry Pi(s)
 TARGET_RPI ?= 0
 # Build for Emscripten/WebGL
@@ -303,7 +303,7 @@ ifneq ($(MAKECMDGOALS),clean)
 ifneq ($(MAKECMDGOALS),distclean)
 
 # Make sure assets exist
-NOEXTRACT ?= 0
+NOEXTRACT ?= 1
 ifeq ($(NOEXTRACT),0)
  DUMMY != $(PYTHON) extract_assets.py $(VERSION) >&2 || echo FAIL
 ifeq ($(DUMMY),FAIL)
