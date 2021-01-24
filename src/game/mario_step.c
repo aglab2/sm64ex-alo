@@ -268,7 +268,7 @@ static s32 perform_ground_quarter_step(struct MarioState *m, Vec3f nextPos) {
     upperWall = resolve_and_return_wall_collisions(nextPos, 60.0f, 50.0f);
 
     floorHeight = find_floor(nextPos[0], nextPos[1], nextPos[2], &floor);
-    ceilHeight = vec3f_find_ceil(nextPos, floorHeight, &ceil);
+    ceilHeight = vec3f_find_ceil(nextPos, nextPos[1], &ceil);
 
     waterLevel = find_water_level(nextPos[0], nextPos[2]);
 
@@ -325,8 +325,13 @@ s32 perform_ground_step(struct MarioState *m) {
     Vec3f intendedPos;
 
     for (i = 0; i < 4; i++) {
-        intendedPos[0] = m->pos[0] + m->floor->normal.y * (m->vel[0] / 4.0f);
-        intendedPos[2] = m->pos[2] + m->floor->normal.y * (m->vel[2] / 4.0f);
+        s16 moveDir = atan2s(m->vel[2], m->vel[0]);
+        float moveX = sins(moveDir);
+        float moveZ = coss(moveDir);
+        float speedFactor = m->floor->normal.y / sqrtf(sqr(m->floor->normal.y) + sqr(m->floor->normal.x * moveX + m->floor->normal.z * moveZ));
+        
+        intendedPos[0] = m->pos[0] + speedFactor * (m->vel[0] / 4.0f);
+        intendedPos[2] = m->pos[2] + speedFactor * (m->vel[2] / 4.0f);
         intendedPos[1] = m->pos[1];
 
         stepResult = perform_ground_quarter_step(m, intendedPos);
@@ -402,7 +407,7 @@ s32 perform_air_quarter_step(struct MarioState *m, Vec3f intendedPos, u32 stepAr
     lowerWall = resolve_and_return_wall_collisions(nextPos, 30.0f, 50.0f);
 
     floorHeight = find_floor(nextPos[0], nextPos[1], nextPos[2], &floor);
-    ceilHeight = vec3f_find_ceil(nextPos, floorHeight, &ceil);
+    ceilHeight = vec3f_find_ceil(nextPos, nextPos[1], &ceil);
 
     waterLevel = find_water_level(nextPos[0], nextPos[2]);
 

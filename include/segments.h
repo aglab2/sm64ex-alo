@@ -2,7 +2,7 @@
 #define SEGMENTS_H
 
 #ifdef BETTERCAMERA
-#define USE_EXT_RAM
+// #define USE_EXT_RAM
 #endif
 
 #ifndef LINKER

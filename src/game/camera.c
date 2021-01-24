@@ -388,6 +388,8 @@ struct CameraStoredInfo sCameraStoreCUp;
  */
 struct CameraStoredInfo sCameraStoreCutscene;
 
+u8 gIsGameCutsceneActive = FALSE;
+
 // first iteration of data
 u32 unused8032CFC0 = 0;
 struct Object *gCutsceneFocus = NULL;
@@ -885,21 +887,7 @@ void pan_ahead_of_player(struct Camera *c) {
     vec3f_add(c->focus, pan);
 }
 
-s16 find_in_bounds_yaw_wdw_bob_thi(Vec3f pos, Vec3f origin, s16 yaw) {
-    switch (gCurrLevelArea) {
-        case AREA_WDW_MAIN:
-            yaw = clamp_positions_and_find_yaw(pos, origin, 4508.f, -3739.f, 4508.f, -3739.f);
-            break;
-        case AREA_BOB:
-            yaw = clamp_positions_and_find_yaw(pos, origin, 8000.f, -8000.f, 7050.f, -8000.f);
-            break;
-        case AREA_THI_HUGE:
-            yaw = clamp_positions_and_find_yaw(pos, origin, 8192.f, -8192.f, 8192.f, -8192.f);
-            break;
-        case AREA_THI_TINY:
-            yaw = clamp_positions_and_find_yaw(pos, origin, 2458.f, -2458.f, 2458.f, -2458.f);
-            break;
-    }
+s16 find_in_bounds_yaw_wdw_bob_thi(UNUSED Vec3f pos, UNUSED Vec3f origin, s16 yaw) {
     return yaw;
 }
 
@@ -8428,6 +8416,7 @@ BAD_RETURN(s32) cutscene_red_coin_star_warp(struct Camera *c) {
     f32 dist;
     s16 pitch, yaw, posYaw;
     struct Object *o = gCutsceneFocus;
+    gIsGameCutsceneActive = TRUE;
 
     vec3f_set(sCutsceneVars[1].point, o->oHomeX, o->oHomeY, o->oHomeZ);
     vec3f_get_dist_and_angle(sCutsceneVars[1].point, c->pos, &dist, &pitch, &yaw);
@@ -8470,6 +8459,7 @@ BAD_RETURN(s32) cutscene_red_coin_star(struct Camera *c) {
  * End the red coin star spawning cutscene
  */
 BAD_RETURN(s32) cutscene_red_coin_star_end(struct Camera *c) {
+    gIsGameCutsceneActive = FALSE;
     retrieve_info_star(c);
     gCutsceneTimer = CUTSCENE_STOP;
     c->cutscene = 0;

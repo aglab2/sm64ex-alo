@@ -15,8 +15,6 @@
 #include "game/object_list_processor.h"
 #include "surface_load.h"
 
-s32 unused8038BE90;
-
 /**
  * Partitions for course and object surfaces. The arrays represent
  * the 16x16 cells that each level is split into.
@@ -44,7 +42,7 @@ s16 sSurfacePoolSize;
 #endif
 
 
-u8 unused8038EEA8[0x30];
+u8 gSurfacePoolError = 0;
 
 /**
  * Allocate the part of the surface node pool to contain a surface node.
@@ -65,8 +63,9 @@ static struct SurfaceNode *alloc_surface_node(void) {
     //! A bounds check! If there's more surface nodes than 7000 allowed,
     //  we, um...
     // Perhaps originally just debug feedback?
-    if (gSurfaceNodesAllocated >= 7000) {
-    }
+    if (gSurfaceNodesAllocated >= SURFACE_NODE_POOL_SIZE) {
+        gSurfacePoolError |= NOT_ENOUGH_ROOM_FOR_NODES;
+     }
 #endif
 
     return node;
@@ -87,11 +86,9 @@ static struct Surface *alloc_surface(void) {
     gSurfacesAllocated++;
 
 #ifndef USE_SYSTEM_MALLOC
-    //! A bounds check! If there's more surfaces than the 2300 allowed,
-    //  we, um...
-    // Perhaps originally just debug feedback?
-    if (gSurfacesAllocated >= sSurfacePoolSize) {
-    }
+     if (gSurfacesAllocated >= sSurfacePoolSize) {
+        gSurfacePoolError |= NOT_ENOUGH_ROOM_FOR_SURFACES;
+     }
 #endif
 
     surface->type = 0;
@@ -554,8 +551,8 @@ void alloc_surface_pools(void) {
     sDynamicSurfaceNodePool = alloc_only_pool_init();
     sDynamicSurfacePool = alloc_only_pool_init();
 #else
-    sSurfacePoolSize = 2300;
-    sSurfaceNodePool = main_pool_alloc(7000 * sizeof(struct SurfaceNode), MEMORY_POOL_LEFT);
+    sSurfacePoolSize = SURFACE_POOL_SIZE;
+    sSurfaceNodePool = main_pool_alloc(SURFACE_NODE_POOL_SIZE * sizeof(struct SurfaceNode), MEMORY_POOL_LEFT);
     sSurfacePool = main_pool_alloc(sSurfacePoolSize * sizeof(struct Surface), MEMORY_POOL_LEFT);
 #endif
 
@@ -624,7 +621,6 @@ void load_area_terrain(s16 index, s16 *data, s8 *surfaceRooms, s16 *macroObjects
 
     // Initialize the data for this.
     gEnvironmentRegions = NULL;
-    unused8038BE90 = 0;
     gSurfaceNodesAllocated = 0;
     gSurfacesAllocated = 0;
 #ifdef USE_SYSTEM_MALLOC

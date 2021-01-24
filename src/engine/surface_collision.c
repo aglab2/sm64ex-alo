@@ -191,13 +191,6 @@ s32 find_wall_collisions(struct WallCollisionData *colData) {
 
     colData->numWalls = 0;
 
-    if (x <= -LEVEL_BOUNDARY_MAX || x >= LEVEL_BOUNDARY_MAX) {
-        return numCollisions;
-    }
-    if (z <= -LEVEL_BOUNDARY_MAX || z >= LEVEL_BOUNDARY_MAX) {
-        return numCollisions;
-    }
-
     // World (level) consists of a 16x16 grid. Find where the collision is on
     // the grid (round toward -inf)
     cellX = ((x + LEVEL_BOUNDARY_MAX) / CELL_SIZE) & NUM_CELLS_INDEX;
@@ -227,9 +220,9 @@ s32 find_wall_collisions(struct WallCollisionData *colData) {
 static struct Surface *find_ceil_from_list(struct SurfaceNode *surfaceNode, s32 x, s32 y, s32 z, f32 *pheight) {
     register struct Surface *surf;
     register s32 x1, z1, x2, z2, x3, z3;
+    f32 nx, ny, nz, oo, height;
     struct Surface *ceil = NULL;
-
-    ceil = NULL;
+    *pheight = CELL_HEIGHT_LIMIT;
 
     // Stay in this loop until out of ceilings.
     while (surfaceNode != NULL) {
@@ -266,13 +259,11 @@ static struct Surface *find_ceil_from_list(struct SurfaceNode *surfaceNode, s32 
         else if (surf->type == SURFACE_CAMERA_BOUNDARY) {
             continue;
         }
-
-        {
-            f32 nx = surf->normal.x;
-            f32 ny = surf->normal.y;
-            f32 nz = surf->normal.z;
-            f32 oo = surf->originOffset;
-            f32 height;
+        
+        nx = surf->normal.x;
+        ny = surf->normal.y;
+        nz = surf->normal.z;
+        oo = surf->originOffset;
 
             // If a wall, ignore it. Likely a remnant, should never occur.
             if (ny == 0.0f) {
@@ -281,23 +272,26 @@ static struct Surface *find_ceil_from_list(struct SurfaceNode *surfaceNode, s32 
 
             // Find the ceil height at the specific point.
             height = -(x * nx + nz * z + oo) / ny;
+        if (height > *pheight) {
+            continue;
+        }
 
-            // Checks for ceiling interaction with a 78 unit buffer.
-            //! (Exposed Ceilings) Because any point above a ceiling counts
-            //  as interacting with a ceiling, ceilings far below can cause
-            // "invisible walls" that are really just exposed ceilings.
-            if (y - (height - -78.0f) > 0.0f) {
+        // Checks for ceiling interaction
+        if (y > height) {
+            continue;
+        }
+
+            if (y >= surf->upperY) {
                 continue;
             }
 
             *pheight = height;
             ceil = surf;
+            if (height == y) {
             break;
         }
     }
 
-    //! (Surface Cucking) Since only the first ceil is returned and not the lowest,
-    //  lower ceilings can be "cucked" by higher ceilings.
     return ceil;
 }
 
@@ -319,13 +313,6 @@ f32 find_ceil(f32 posX, f32 posY, f32 posZ, struct Surface **pceil) {
     y = (s16) posY;
     z = (s16) posZ;
     *pceil = NULL;
-
-    if (x <= -LEVEL_BOUNDARY_MAX || x >= LEVEL_BOUNDARY_MAX) {
-        return height;
-    }
-    if (z <= -LEVEL_BOUNDARY_MAX || z >= LEVEL_BOUNDARY_MAX) {
-        return height;
-    }
 
     // Each level is split into cells to limit load, find the appropriate cell.
     cellX = ((x + LEVEL_BOUNDARY_MAX) / CELL_SIZE) & NUM_CELLS_INDEX;
@@ -400,10 +387,9 @@ f32 find_floor_height_and_data(f32 xPos, f32 yPos, f32 zPos, struct FloorGeometr
 static struct Surface *find_floor_from_list(struct SurfaceNode *surfaceNode, s32 x, s32 y, s32 z, f32 *pheight) {
     register struct Surface *surf;
     register s32 x1, z1, x2, z2, x3, z3;
-    f32 nx, ny, nz;
-    f32 oo;
-    f32 height;
+    f32 nx, ny, nz, oo, height;
     struct Surface *floor = NULL;
+    *pheight = FLOOR_LOWER_LIMIT;
 
     // Iterate through the list of floors until there are no more floors.
     while (surfaceNode != NULL) {
@@ -454,18 +440,22 @@ static struct Surface *find_floor_from_list(struct SurfaceNode *surfaceNode, s32
 
         // Find the height of the floor at a given location.
         height = -(x * nx + nz * z + oo) / ny;
+        if (height < *pheight) {
+            continue;
+        }
+
         // Checks for floor interaction with a 78 unit buffer.
-        if (y - (height + -78.0f) < 0.0f) {
+        if (y < (height - 78.0f)) {
             continue;
         }
 
         *pheight = height;
         floor = surf;
+        if (height - 78.0f == y) {
         break;
     }
+    }
 
-    //! (Surface Cucking) Since only the first floor is returned and not the highest,
-    //  higher floors can be "cucked" by lower floors.
     return floor;
 }
 
@@ -480,11 +470,35 @@ f32 find_floor_height(f32 x, f32 y, f32 z) {
     return floorHeight;
 }
 
+ /**
+  * Find the highest static floor under a given position.
+  */
+f32 find_static_floor(f32 xPos, f32 yPos, f32 zPos, struct Surface **pfloor) {
+    struct SurfaceNode *surfaceList;
+    struct Surface *floor;
+    f32 floorHeight = FLOOR_LOWER_LIMIT;
+
+    //! PUs
+    s16 x = (s16) xPos;
+    s16 y = (s16) yPos;
+    s16 z = (s16) zPos;
+
+    // Each level is split into cells to limit load, find the appropriate cell.
+    s16 cellX = ((x + LEVEL_BOUNDARY_MAX) / CELL_SIZE) & NUM_CELLS_INDEX;
+    s16 cellZ = ((z + LEVEL_BOUNDARY_MAX) / CELL_SIZE) & NUM_CELLS_INDEX;
+
+    surfaceList = gStaticSurfacePartition[cellZ][cellX][SPATIAL_PARTITION_FLOORS].next;
+    floor = find_floor_from_list(surfaceList, x, y, z, &floorHeight);
+
+    *pfloor = floor;
+
+    return floorHeight;
+}
+
 /**
- * Find the highest dynamic floor under a given position. Perhaps originally static
- * and dynamic floors were checked separately.
- */
-f32 unused_find_dynamic_floor(f32 xPos, f32 yPos, f32 zPos, struct Surface **pfloor) {
+ * Find the highest dynamic floor under a given position.
+  */
+f32 find_dynamic_floor(f32 xPos, f32 yPos, f32 zPos, struct Surface **pfloor) {
     struct SurfaceNode *surfaceList;
     struct Surface *floor;
     f32 floorHeight = FLOOR_LOWER_LIMIT;
@@ -526,13 +540,6 @@ f32 find_floor(f32 xPos, f32 yPos, f32 zPos, struct Surface **pfloor) {
     s16 z = (s16) zPos;
 
     *pfloor = NULL;
-
-    if (x <= -LEVEL_BOUNDARY_MAX || x >= LEVEL_BOUNDARY_MAX) {
-        return height;
-    }
-    if (z <= -LEVEL_BOUNDARY_MAX || z >= LEVEL_BOUNDARY_MAX) {
-        return height;
-    }
 
     // Each level is split into cells to limit load, find the appropriate cell.
     cellX = ((x + LEVEL_BOUNDARY_MAX) / CELL_SIZE) & NUM_CELLS_INDEX;

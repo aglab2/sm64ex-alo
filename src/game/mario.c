@@ -528,6 +528,10 @@ u32 mario_get_terrain_sound_addend(struct MarioState *m) {
 struct Surface *resolve_and_return_wall_collisions(Vec3f pos, f32 offset, f32 radius) {
     struct WallCollisionData collisionData;
     struct Surface *wall = NULL;
+    u8 i = 0;
+    s16 v = 0;
+    s16 best = 0xffff;
+    s16 d = 0;
 
     collisionData.x = pos[0];
     collisionData.y = pos[1];
@@ -536,15 +540,26 @@ struct Surface *resolve_and_return_wall_collisions(Vec3f pos, f32 offset, f32 ra
     collisionData.offsetY = offset;
 
     if (find_wall_collisions(&collisionData)) {
-        wall = collisionData.walls[collisionData.numWalls - 1];
+        for (i = 0; i < collisionData.numWalls; i++) {
+            v = atan2s(collisionData.walls[i]->normal.z, collisionData.walls[i]->normal.x);
+            d = absi((((s16)(gCurrentObject->oMoveAngleYaw) - (v + 0x8000)) << 0x10) / 0x10000);
+            if (i == 0) {
+                wall = collisionData.walls[0];
+                best = d;
+            } else {
+                if (d < best) {
+                    wall = collisionData.walls[i];
+                    best = d;
+                }
+            }
+        }
     }
 
     pos[0] = collisionData.x;
     pos[1] = collisionData.y;
     pos[2] = collisionData.z;
 
-    // This only returns the most recent wall and can also return NULL
-    // there are no wall collisions.
+    // returns the wall the actor is closest to facing
     return wall;
 }
 
@@ -554,7 +569,7 @@ struct Surface *resolve_and_return_wall_collisions(Vec3f pos, f32 offset, f32 ra
 f32 vec3f_find_ceil(Vec3f pos, f32 height, struct Surface **ceil) {
     UNUSED f32 unused;
 
-    return find_ceil(pos[0], height + 80.0f, pos[2], ceil);
+    return find_ceil(pos[0], height + 3.0f, pos[2], ceil);
 }
 
 /**
@@ -1348,7 +1363,7 @@ void update_mario_geometry_inputs(struct MarioState *m) {
     f32 ceilToFloorDist;
 
     f32_find_wall_collision(&m->pos[0], &m->pos[1], &m->pos[2], 60.0f, 50.0f);
-    f32_find_wall_collision(&m->pos[0], &m->pos[1], &m->pos[2], 30.0f, 24.0f);
+    f32_find_wall_collision(&m->pos[0], &m->pos[1], &m->pos[2], 30.0f, 25.0f);
 
     m->floorHeight = find_floor(m->pos[0], m->pos[1], m->pos[2], &m->floor);
 
@@ -1361,7 +1376,7 @@ void update_mario_geometry_inputs(struct MarioState *m) {
         m->floorHeight = find_floor(m->pos[0], m->pos[1], m->pos[2], &m->floor);
     }
 
-    m->ceilHeight = vec3f_find_ceil(&m->pos[0], m->floorHeight, &m->ceil);
+    m->ceilHeight = vec3f_find_ceil(&m->pos[0], m->pos[1], &m->ceil);
     gasLevel = find_poison_gas_level(m->pos[0], m->pos[2]);
     m->waterLevel = find_water_level(m->pos[0], m->pos[2]);
 

@@ -4,32 +4,19 @@
 #include <PR/ultratypes.h>
 
 #include "types.h"
-
-// Range level area is 16384x16384 (-8192 to +8192 in x and z)
-#define LEVEL_BOUNDARY_MAX  0x2000 // 8192
-
-#define CELL_SIZE           (1 << 10) // 0x400
-
-#define CELL_HEIGHT_LIMIT           20000
-#define FLOOR_LOWER_LIMIT           -11000
-#define FLOOR_LOWER_LIMIT_MISC      (FLOOR_LOWER_LIMIT + 1000)
-// same as FLOOR_LOWER_LIMIT_MISC, explicitly for shadow.c 
-// It doesn't match if ".0" is removed or ".f" is added
-#define FLOOR_LOWER_LIMIT_SHADOW    (FLOOR_LOWER_LIMIT + 1000.0)
+#include "extended_bounds.h"
 
 struct WallCollisionData
 {
     /*0x00*/ f32 x, y, z;
     /*0x0C*/ f32 offsetY;
     /*0x10*/ f32 radius;
-    /*0x14*/ s16 unused;
     /*0x16*/ s16 numWalls;
     /*0x18*/ struct Surface *walls[4];
 };
 
 struct FloorGeometry
 {
-    f32 unused[4]; // possibly position data?
     f32 normalX;
     f32 normalY;
     f32 normalZ;
@@ -41,6 +28,8 @@ s32 find_wall_collisions(struct WallCollisionData *colData);
 f32 find_ceil(f32 posX, f32 posY, f32 posZ, struct Surface **pceil);
 f32 find_floor_height_and_data(f32 xPos, f32 yPos, f32 zPos, struct FloorGeometry **floorGeo);
 f32 find_floor_height(f32 x, f32 y, f32 z);
+f32 find_static_floor(f32 xPos, f32 yPos, f32 zPos, struct Surface **pfloor);
+f32 find_dynamic_floor(f32 xPos, f32 yPos, f32 zPos, struct Surface **pfloor);
 f32 find_floor(f32 xPos, f32 yPos, f32 zPos, struct Surface **pfloor);
 f32 find_water_level(f32 x, f32 z);
 f32 find_poison_gas_level(f32 x, f32 z);

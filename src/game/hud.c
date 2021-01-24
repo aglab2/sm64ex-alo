@@ -424,6 +424,20 @@ void render_hud_camera_status(void) {
     gSPDisplayList(gDisplayListHead++, dl_hud_img_end);
 }
 
+#ifdef TARGET_N64
+
+#include "engine/surface_load.h"
+void render_hud_surface_text(void) {
+    if (gSurfacePoolError & NOT_ENOUGH_ROOM_FOR_NODES) {
+        print_text(GFX_DIMENSIONS_RECT_FROM_LEFT_EDGE(22), 40, "SURFACE NODE POOL FULL");
+    }
+    
+    if (gSurfacePoolError & NOT_ENOUGH_ROOM_FOR_SURFACES) {
+        print_text(GFX_DIMENSIONS_RECT_FROM_LEFT_EDGE(22), 20, "SURFACE POOL FULL");
+    }
+}
+#endif
+
 /**
  * Render HUD strings using hudDisplayFlags with it's render functions,
  * excluding the cannon reticle which detects a camera preset for it.
@@ -509,5 +523,9 @@ void render_hud(void) {
         ) {
             render_hud_timer();
         }
+
+#ifdef TARGET_N64
+        render_hud_surface_text();
+#endif
     }
 }
