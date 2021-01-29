@@ -1,4 +1,4 @@
-void scroll_bob_dl_1_mesh_vtx_20() {
+void scroll_bob_dl_1_013_mesh_vtx_4() {
 	int i = 0;
 	int count = 12;
 	int width = 32 * 0x20;
@@ -6,7 +6,7 @@ void scroll_bob_dl_1_mesh_vtx_20() {
 
 	static int currentY = 0;
 	int deltaY;
-	Vtx *vertices = segmented_to_virtual(bob_dl_1_mesh_vtx_20);
+	Vtx *vertices = segmented_to_virtual(bob_dl_1_013_mesh_vtx_4);
 
 	deltaY = (int)(-0.9799997806549072 * 0x20) % height;
 
@@ -21,5 +21,5 @@ void scroll_bob_dl_1_mesh_vtx_20() {
 
 }
 void scroll_bob() {
-	scroll_bob_dl_1_mesh_vtx_20();
+	scroll_bob_dl_1_013_mesh_vtx_4();
 }

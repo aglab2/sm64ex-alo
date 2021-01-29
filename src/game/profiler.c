@@ -6,6 +6,10 @@
 #include "profiler.h"
 #include "game_init.h"
 
+#include "game/object_list_processor.h"
+#include "object_fields.h"
+
+
 s16 gProfilerMode = 0;
 
 // the thread 3 info is logged on the opposite profiler from what is used by
@@ -17,6 +21,45 @@ s16 gCurrentFrameIndex1 = 1;
 s16 gCurrentFrameIndex2 = 0;
 
 struct ProfilerFrameData gProfilerFrameData[2];
+
+// SDK states that 1 cycle takes about 21.33 nanoseconds
+#define SECONDS_PER_CYCLE 0.00000002133f
+
+#define FPS_COUNTER_X_POS 24
+#define FPS_COUNTER_Y_POS 190
+
+static u32 gLastOSTime = 0;
+static float gFrameTime = 0.0f;
+static u16 gFrames = 0;
+static u16 gFPS = 0;
+
+void calculate_frameTime_from_OSTime(u32 diff) {
+    gFrameTime += diff * SECONDS_PER_CYCLE;
+    gFrames++;
+}
+
+void render_fps(void) {
+    u32 newTime = (u32) osGetTime();
+
+    calculate_frameTime_from_OSTime(newTime - gLastOSTime);
+
+    // If frame time is longer or equal to a second, update FPS counter.
+    if (gFrameTime >= 1.0f) {
+        gFPS = gFrames;
+        gFrames = 0;
+        gFrameTime -= 1.0f;
+    }
+
+    print_text_fmt_int(FPS_COUNTER_X_POS, FPS_COUNTER_Y_POS, "FPS %d", gFPS);
+    if (gMarioObject)
+    {
+        print_text_fmt_int(200, 60, "%d", (int) gMarioObject->oPosX);
+        print_text_fmt_int(200, 40, "%d", (int) gMarioObject->oPosY);
+        print_text_fmt_int(200, 20, "%d", (int) gMarioObject->oPosZ);
+    }
+
+    gLastOSTime = newTime;
+}
 
 // log the current osTime to the appropriate idx for current thread5 processes.
 void profiler_log_thread5_time(enum ProfilerGameEvent eventID) {
@@ -300,6 +343,7 @@ void draw_profiler(void) {
         gProfilerMode ^= 1;
     }
 
+    render_fps();
     if (gProfilerMode == 0) {
         draw_profiler_mode_0();
     } else {

@@ -157,6 +157,29 @@ struct GraphNodeLevelOfDetail *init_graph_node_render_range(struct AllocOnlyPool
     return graphNode;
 }
 
+struct GraphNodeCullingMarioPos *init_graph_node_culling_mario_pos(struct AllocOnlyPool *pool,
+                                                                   struct GraphNodeCullingMarioPos *graphNode,
+                                                                   s16 xMin, s16 xMax,
+                                                                   s16 yMin, s16 yMax,
+                                                                   s16 zMin, s16 zMax)
+{
+    if (pool != NULL) {
+        graphNode = alloc_only_pool_alloc(pool, sizeof(struct GraphNodeCullingMarioPos));
+    }
+
+    if (graphNode != NULL) {
+        init_scene_graph_node_links(&graphNode->node, GRAPH_NODE_TYPE_CULLING_MARIO_POS);
+        graphNode->xMin = xMin;
+        graphNode->xMax = xMax;
+        graphNode->yMin = yMin;
+        graphNode->yMax = yMax;
+        graphNode->zMin = zMin;
+        graphNode->zMax = zMax;
+    }
+
+    return graphNode;
+}
+
 /**
  * Allocates and returns a newly created switch case node
  */

@@ -1200,7 +1200,7 @@ const Gfx bowser_seg6_dl_0603B948[] = {
     gsDPSetCombineMode(G_CC_SHADE, G_CC_SHADE),
     gsDPSetEnvColor(255, 255, 255, 255),
     gsDPSetAlphaCompare(G_AC_NONE),
-    gsDPSetRenderMode(G_RM_AA_ZB_XLU_SURF, G_RM_NOOP2),
+    gsDPSetRenderMode(G_RM_ZB_XLU_SURF, G_RM_NOOP2),
     gsSPSetGeometryMode(G_LIGHTING),
     gsSPEndDisplayList(),
 };

@@ -74,46 +74,46 @@ struct RenderModeContainer {
 /* Rendermode settings for cycle 1 for all 8 layers. */
 struct RenderModeContainer renderModeTable_1Cycle[2] = { { {
     G_RM_OPA_SURF,
-    G_RM_AA_OPA_SURF,
-    G_RM_AA_OPA_SURF,
-    G_RM_AA_OPA_SURF,
-    G_RM_AA_TEX_EDGE,
-    G_RM_AA_XLU_SURF,
-    G_RM_AA_XLU_SURF,
-    G_RM_AA_XLU_SURF,
+    G_RM_OPA_SURF,
+    G_RM_OPA_SURF,
+    G_RM_OPA_SURF,
+    G_RM_TEX_EDGE,
+    G_RM_XLU_SURF,
+    G_RM_XLU_SURF,
+    G_RM_XLU_SURF,
     } },
     { {
     /* z-buffered */
     G_RM_ZB_OPA_SURF,
-    G_RM_AA_ZB_OPA_SURF,
-    G_RM_AA_ZB_OPA_DECAL,
-    G_RM_AA_ZB_OPA_INTER,
-    G_RM_AA_ZB_TEX_EDGE,
-    G_RM_AA_ZB_XLU_SURF,
-    G_RM_AA_ZB_XLU_DECAL,
+    G_RM_ZB_OPA_SURF,
+    G_RM_ZB_OPA_DECAL,
+    G_RM_RA_ZB_OPA_INTER,
+    G_AC_NONE,
+    G_RM_ZB_XLU_SURF,
+    G_RM_ZB_XLU_DECAL,
     G_RM_AA_ZB_XLU_INTER,
     } } };
 
 /* Rendermode settings for cycle 2 for all 8 layers. */
 struct RenderModeContainer renderModeTable_2Cycle[2] = { { {
     G_RM_OPA_SURF2,
-    G_RM_AA_OPA_SURF2,
-    G_RM_AA_OPA_SURF2,
-    G_RM_AA_OPA_SURF2,
-    G_RM_AA_TEX_EDGE2,
-    G_RM_AA_XLU_SURF2,
-    G_RM_AA_XLU_SURF2,
-    G_RM_AA_XLU_SURF2,
+    G_RM_OPA_SURF2,
+    G_RM_OPA_SURF2,
+    G_RM_OPA_SURF2,
+    G_RM_TEX_EDGE2,
+    G_RM_XLU_SURF2,
+    G_RM_XLU_SURF2,
+    G_RM_XLU_SURF2,
     } },
     { {
     /* z-buffered */
     G_RM_ZB_OPA_SURF2,
-    G_RM_AA_ZB_OPA_SURF2,
-    G_RM_AA_ZB_OPA_DECAL2,
-    G_RM_AA_ZB_OPA_INTER2,
+    G_RM_ZB_OPA_SURF2,
+    G_RM_ZB_OPA_DECAL2,
+    G_RM_RA_ZB_OPA_INTER2,
     G_RM_AA_ZB_TEX_EDGE2,
-    G_RM_AA_ZB_XLU_SURF2,
-    G_RM_AA_ZB_XLU_DECAL2,
+    G_RM_ZB_XLU_SURF2,
+    G_RM_ZB_XLU_DECAL2,
     G_RM_AA_ZB_XLU_INTER2,
     } } };
 
@@ -283,6 +283,41 @@ static void geo_process_level_of_detail(struct GraphNodeLevelOfDetail *node) {
 #endif
 
     if (node->minDistance <= distanceFromCam && distanceFromCam < node->maxDistance) {
+        if (node->node.children != 0) {
+            geo_process_node_and_siblings(node->node.children);
+        }
+    }
+}
+
+#include "game/object_list_processor.h"
+#include "object_fields.h"
+
+static void geo_process_culling_mario_pos(struct GraphNodeCullingMarioPos *node) {
+    int shouldProcess = 1;
+
+    if (gMarioObject)
+    {
+        if (!(node->xMin < gMarioObject->oPosX && gMarioObject->oPosX < node->xMax))
+        {
+            shouldProcess = 0;
+        }
+        if (!(node->yMin < gMarioObject->oPosY && gMarioObject->oPosY < node->yMax))
+        {
+            shouldProcess = 0;
+        }
+        if (!(node->zMin < gMarioObject->oPosZ && gMarioObject->oPosZ < node->zMax))
+        {
+            shouldProcess = 0;
+        }
+    }
+
+#ifndef TARGET_N64
+    // We assume modern hardware is powerful enough to draw the most detailed variant
+    shouldProcess = 1;
+#endif
+
+    if (shouldProcess)
+    {
         if (node->node.children != 0) {
             geo_process_node_and_siblings(node->node.children);
         }
@@ -988,6 +1023,9 @@ void geo_process_node_and_siblings(struct GraphNode *firstNode) {
                         break;
                     case GRAPH_NODE_TYPE_LEVEL_OF_DETAIL:
                         geo_process_level_of_detail((struct GraphNodeLevelOfDetail *) curGraphNode);
+                        break;
+                    case GRAPH_NODE_TYPE_CULLING_MARIO_POS:
+                        geo_process_culling_mario_pos((struct GraphNodeCullingMarioPos *) curGraphNode);
                         break;
                     case GRAPH_NODE_TYPE_SWITCH_CASE:
                         geo_process_switch((struct GraphNodeSwitchCase *) curGraphNode);

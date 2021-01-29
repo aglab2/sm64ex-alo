@@ -412,13 +412,13 @@
     CMD_HH(0x0000, 0x0000)
 
 /**
- * 0x1F: No operation
+ * 0x1F: Mario distance culling
  */
-#define GEO_NOP_1F() \
+#define GEO_CULLING_MARIO_POS(x_min, x_max, y_min, y_max, z_min, z_max) \
     CMD_BBH(0x1F, 0x00, 0x0000), \
-    CMD_HH(0x0000, 0x0000), \
-    CMD_HH(0x0000, 0x0000), \
-    CMD_HH(0x0000, 0x0000)
+    CMD_HH(x_min, x_max), \
+    CMD_HH(y_min, y_max), \
+    CMD_HH(z_min, z_max)
 
 /**
  * 0x20: Create a scene graph node that specifies for an object the radius that

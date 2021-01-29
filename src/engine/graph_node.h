@@ -44,6 +44,7 @@
 #define GRAPH_NODE_TYPE_BACKGROUND           (0x02C | GRAPH_NODE_TYPE_FUNCTIONAL)
 #define GRAPH_NODE_TYPE_HELD_OBJ             (0x02E | GRAPH_NODE_TYPE_FUNCTIONAL)
 #define GRAPH_NODE_TYPE_CULLING_RADIUS        0x02F
+#define GRAPH_NODE_TYPE_CULLING_MARIO_POS     0x030
 
 // The number of master lists. A master list determines the order and render
 // mode with which display lists are drawn.
@@ -154,6 +155,18 @@ struct GraphNodeLevelOfDetail
     /*0x14*/ s16 minDistance;
     /*0x16*/ s16 maxDistance;
 };
+
+struct GraphNodeCullingMarioPos
+{
+    /*0x00*/ struct GraphNode node;
+    s16 xMax;
+    s16 xMin;
+    s16 yMax;
+    s16 yMin;
+    s16 zMax;
+    s16 zMin;
+};
+
 
 /** GraphNode that renders exactly one of its children.
  *  Which one is rendered is determined by the field 'selectedCase'
@@ -374,6 +387,11 @@ struct GraphNodeStart *init_graph_node_start(struct AllocOnlyPool *pool, struct 
 struct GraphNodeMasterList *init_graph_node_master_list(struct AllocOnlyPool *pool, struct GraphNodeMasterList *graphNode, s16 on);
 struct GraphNodeLevelOfDetail *init_graph_node_render_range(struct AllocOnlyPool *pool, struct GraphNodeLevelOfDetail *graphNode,
                                                             s16 minDistance, s16 maxDistance);
+struct GraphNodeCullingMarioPos *init_graph_node_culling_mario_pos(struct AllocOnlyPool *pool,
+                                                                   struct GraphNodeCullingMarioPos *graphNode,
+                                                                   s16 xMin, s16 xMax,
+                                                                   s16 yMin, s16 yMax,
+                                                                   s16 zMin, s16 zMax);
 struct GraphNodeSwitchCase *init_graph_node_switch_case(struct AllocOnlyPool *pool, struct GraphNodeSwitchCase *graphNode,
                                                         s16 numCases, s16 selectedCase, GraphNodeFunc nodeFunc, s32 unused);
 struct GraphNodeCamera *init_graph_node_camera(struct AllocOnlyPool *pool, struct GraphNodeCamera *graphNode,

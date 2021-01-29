@@ -40,7 +40,7 @@ GeoLayoutCommandProc GeoLayoutJumpTable[] = {
     geo_layout_cmd_node_held_obj,
     geo_layout_cmd_node_scale,
     geo_layout_cmd_nop2,
-    geo_layout_cmd_nop3,
+    geo_layout_cmd_culling_mario_pos,
     geo_layout_cmd_node_culling_radius,
 };
 
@@ -287,8 +287,20 @@ void geo_layout_cmd_node_start(void) {
     gGeoLayoutCommand += 0x04 << CMD_SIZE_SHIFT;
 }
 
-// 0x1F: No operation
-void geo_layout_cmd_nop3(void) {
+// 0x1F: AGLAB Mario pos culling
+void geo_layout_cmd_culling_mario_pos(void) {
+    struct GraphNodeCullingMarioPos *graphNode;
+    s16 xMin = cur_geo_cmd_s16(0x04);
+    s16 xMax = cur_geo_cmd_s16(0x06);
+    s16 yMin = cur_geo_cmd_s16(0x08);
+    s16 yMax = cur_geo_cmd_s16(0x0a);
+    s16 zMin = cur_geo_cmd_s16(0x0c);
+    s16 zMax = cur_geo_cmd_s16(0x0e);
+
+    graphNode = init_graph_node_culling_mario_pos(gGraphNodePool, NULL, xMin, xMax, yMin, yMax, zMin, zMax);
+
+    register_scene_graph_node(&graphNode->node);
+
     gGeoLayoutCommand += 0x10 << CMD_SIZE_SHIFT;
 }
 
