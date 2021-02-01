@@ -309,6 +309,9 @@ void area_update_objects(void) {
  * transition type, time in frames, and the RGB color that will fill the screen.
  */
 void play_transition(s16 transType, s16 time, u8 red, u8 green, u8 blue) {
+    red = 0;
+    green = 0;
+    blue = 0;
     gWarpTransition.isActive = TRUE;
     gWarpTransition.type = transType;
     gWarpTransition.time = time;

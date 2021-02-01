@@ -418,6 +418,7 @@ s32 mario_get_floor_class(struct MarioState *m) {
                 floorClass = SURFACE_CLASS_SLIPPERY;
                 break;
 
+            case SURFACE_HANGABLE:
             case SURFACE_VERY_SLIPPERY:
             case SURFACE_ICE:
             case SURFACE_HARD_VERY_SLIPPERY:
@@ -496,6 +497,7 @@ u32 mario_get_terrain_sound_addend(struct MarioState *m) {
                     floorSoundType = 2;
                     break;
 
+                case SURFACE_HANGABLE:
                 case SURFACE_VERY_SLIPPERY:
                 case SURFACE_ICE:
                 case SURFACE_HARD_VERY_SLIPPERY:
@@ -576,6 +578,9 @@ f32 vec3f_find_ceil(Vec3f pos, f32 height, struct Surface **ceil) {
  * Determines if Mario is facing "downhill."
  */
 s32 mario_facing_downhill(struct MarioState *m, s32 turnYaw) {
+    if (m->floor && m->floor->type == SURFACE_HANGABLE)
+        return false;
+
     s16 faceAngleYaw = m->faceAngle[1];
 
     // This is never used in practice, as turnYaw is
@@ -595,9 +600,7 @@ s32 mario_facing_downhill(struct MarioState *m, s32 turnYaw) {
 u32 mario_floor_is_slippery(struct MarioState *m) {
     f32 normY;
 
-    if ((m->area->terrainType & TERRAIN_MASK) == TERRAIN_SLIDE
-        && m->floor->normal.y < 0.9998477f //~cos(1 deg)
-    ) {
+    if (m->floor->type == SURFACE_HANGABLE) {
         return TRUE;
     }
 
@@ -628,8 +631,7 @@ u32 mario_floor_is_slippery(struct MarioState *m) {
 s32 mario_floor_is_slope(struct MarioState *m) {
     f32 normY;
 
-    if ((m->area->terrainType & TERRAIN_MASK) == TERRAIN_SLIDE
-        && m->floor->normal.y < 0.9998477f) { // ~cos(1 deg)
+    if (m->floor->type == SURFACE_HANGABLE) {
         return TRUE;
     }
 
@@ -660,6 +662,10 @@ s32 mario_floor_is_slope(struct MarioState *m) {
 s32 mario_floor_is_steep(struct MarioState *m) {
     f32 normY;
     s32 result = FALSE;
+
+    if (m->floor->type == SURFACE_HANGABLE) {
+        return TRUE;
+    }
 
     // Interestingly, this function does not check for the
     // slide terrain type. This means that steep behavior persists for
